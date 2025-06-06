@@ -5,17 +5,22 @@ import { ChinnuButton } from "@/components/ChinnuButton";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Info, ExternalLink } from "lucide-react";
+import { Info } from "lucide-react";
+import { database } from "@/lib/firebase"; // Import Firebase database
+import { ref, set, onValue, off, update } from "firebase/database"; // Import RTDB functions
+
 // import { useToast } from "@/hooks/use-toast"; // Uncomment if you want to use toast notifications
+
+const CALL_SIGNAL_PATH = 'chinnuCall/signal';
 
 export default function ControllerPage() {
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [currentYear, setCurrentYear] = useState<number | null>(null);
+  const [isRinging, setIsRinging] = useState(false); // Indicates this controller is making a call / ringback tone
   // const { toast } = useToast(); // Uncomment for toast notifications
 
   useEffect(() => {
-    // Ensure this runs only on the client
     if (typeof window !== "undefined") {
       let id = localStorage.getItem("chinnuCallerDeviceId");
       if (!id) {
@@ -24,9 +29,8 @@ export default function ControllerPage() {
       }
       setDeviceId(id);
 
-      // Preload audio metadata
       if (audioRef.current) {
-        audioRef.current.load(); // This will respect the preload="metadata" attribute
+        audioRef.current.load();
       }
     }
   }, []);
@@ -35,35 +39,63 @@ export default function ControllerPage() {
     setCurrentYear(new Date().getFullYear());
   }, []);
 
+  // Listen for call dismissal
+  useEffect(() => {
+    if (!deviceId || !database) return;
+
+    const signalRef = ref(database, CALL_SIGNAL_PATH);
+    const listener = onValue(signalRef, (snapshot) => {
+      const data = snapshot.val();
+      // If the call was initiated by this device and is now inactive
+      if (data && !data.active && data.fromDeviceId === deviceId) {
+        setIsRinging(false);
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
+      }
+    });
+
+    return () => {
+      off(signalRef, 'value', listener);
+    };
+  }, [deviceId]);
+
 
   const handleChinnuClick = () => {
-    console.log(`Chinnu button clicked on device: ${deviceId}. Initiating ring...`);
-
-    if (deviceId) {
-      localStorage.setItem('chinnuCallSignal', JSON.stringify({
-        fromDeviceId: deviceId,
-        timestamp: Date.now(),
-        active: true
-      }));
+    if (!deviceId || !database) {
+      console.error("Device ID or Firebase not initialized.");
+      // toast({ title: "Error", description: "Device ID or Firebase not ready.", variant: "destructive" });
+      return;
     }
+    console.log(`Chinnu button clicked on device: ${deviceId}. Initiating ring via Firebase...`);
 
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0; // Rewind to start
-      audioRef.current.play().catch(error => {
-        console.error("Error playing audio:", error);
-        // toast({ // Uncomment for toast notifications
-        //   title: "Audio Playback Error",
-        //   description: "Could not play ringtone. Please check browser permissions.",
-        //   variant: "destructive",
-        // });
+    const callData = {
+      fromDeviceId: deviceId,
+      timestamp: Date.now(),
+      active: true,
+      dismissedBy: null,
+      dismissTimestamp: null,
+    };
+
+    const signalRef = ref(database, CALL_SIGNAL_PATH);
+    set(signalRef, callData)
+      .then(() => {
+        if (audioRef.current) {
+          audioRef.current.currentTime = 0;
+          setIsRinging(true);
+          audioRef.current.play().catch(error => {
+            console.error("Error playing audio:", error);
+            // toast({ title: "Audio Playback Error", description: "Could not play ringtone.", variant: "destructive" });
+            setIsRinging(false);
+          });
+        }
+        // toast({ title: "Chinnu Call Sent!", description: `Device ${deviceId?.substring(0,8)}... initiated call via Firebase.` });
+      })
+      .catch(error => {
+        console.error("Error sending call signal to Firebase:", error);
+        // toast({ title: "Firebase Error", description: "Could not send call signal.", variant: "destructive" });
       });
-    }
-
-    // Example of using toast notification
-    // toast({ // Uncomment for toast notifications
-    //   title: "Chinnu Call Sent!",
-    //   description: `Device ${deviceId?.substring(0,8)}... attempted to call.`,
-    // });
   };
 
   return (
@@ -101,17 +133,17 @@ export default function ControllerPage() {
         <p className="mt-8 sm:mt-10 font-headline text-xl sm:text-2xl md:text-3xl text-primary">
           Tap "Chinnu" to make a call!
         </p>
-        <p className="mt-2 text-xs sm:text-sm text-muted-foreground max-w-xs sm:max-w-md md:max-w-lg">
-          When you press the button, it will attempt to play a ringtone locally and send a signal to any open Target Device page.
-        </p>
-        <Link href="/target" className="mt-4 inline-flex items-center text-sm text-primary hover:underline" target="_blank" rel="noopener noreferrer">
-          Open Target Device Page <ExternalLink className="ml-1 h-4 w-4" />
-        </Link>
+
+        {isRinging && (
+          <p className="mt-4 text-base sm:text-lg text-primary font-semibold animate-pulse">
+            Ringing...
+          </p>
+        )}
       </main>
 
       <audio ref={audioRef} src="/ringtone.mp3" preload="metadata" loop={false} />
 
-      <footer className="py-4 sm:py-6 text-center text-muted-foreground text-xs">
+      <footer className="py-4 sm:py-6 text-center text-muted-foreground text-xs mt-auto">
         Chinnu Caller (Controller) &copy; {currentYear ?? ""} &bull; Designed with <span className="text-primary">&hearts;</span>
       </footer>
     </div>

@@ -6,8 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Info, PhoneIncoming, PhoneOff } from "lucide-react";
 import Link from "next/link";
+import { database } from "@/lib/firebase"; // Import Firebase database
+import { ref, onValue, off, update } from "firebase/database"; // Import RTDB functions
 
-const CALL_SIGNAL_KEY = 'chinnuCallSignal';
+const CALL_SIGNAL_PATH = 'chinnuCall/signal';
 
 export default function TargetPage() {
   const [targetDeviceId, setTargetDeviceId] = useState<string | null>(null);
@@ -17,7 +19,6 @@ export default function TargetPage() {
   const [currentYear, setCurrentYear] = useState<number | null>(null);
 
   useEffect(() => {
-    // Initialize target device ID
     if (typeof window !== "undefined") {
       let id = localStorage.getItem("chinnuTargetDeviceId");
       if (!id) {
@@ -26,9 +27,8 @@ export default function TargetPage() {
       }
       setTargetDeviceId(id);
 
-      // Preload audio metadata
       if (audioRef.current) {
-        audioRef.current.load(); // This will respect the preload="metadata" attribute
+        audioRef.current.load();
       }
     }
   }, []);
@@ -38,82 +38,56 @@ export default function TargetPage() {
   }, []);
 
   useEffect(() => {
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === CALL_SIGNAL_KEY && event.newValue) {
-        try {
-          const signalData = JSON.parse(event.newValue);
-          if (signalData.active) {
-            setCallerDeviceId(signalData.fromDeviceId);
-            setIsRinging(true);
-            if (audioRef.current) {
-              audioRef.current.currentTime = 0;
-              audioRef.current.play().catch(console.error);
-            }
-          } else {
-            // Signal is not active (e.g., dismissed by another target or caller cancelled)
-            // Only stop ringing if this target wasn't the one dismissing (or if no dismisser specified)
-            if (!signalData.dismissedBy || signalData.dismissedBy !== targetDeviceId) {
-                 setIsRinging(false);
-                 setCallerDeviceId(null);
-                 if (audioRef.current) {
-                   audioRef.current.pause();
-                   audioRef.current.currentTime = 0;
-                 }
-            }
-          }
-        } catch (error) {
-          console.error("Error parsing call signal data:", error);
+    if (!targetDeviceId || !database) return; // Wait for targetDeviceId and Firebase to be ready
+
+    const signalRef = ref(database, CALL_SIGNAL_PATH);
+    const listener = onValue(signalRef, (snapshot) => {
+      const signalData = snapshot.val();
+      if (signalData && signalData.active) {
+        setCallerDeviceId(signalData.fromDeviceId);
+        setIsRinging(true);
+        if (audioRef.current) {
+          audioRef.current.currentTime = 0;
+          audioRef.current.play().catch(console.error);
+        }
+      } else { // Signal is not active or doesn't exist
+        setIsRinging(false);
+        setCallerDeviceId(null);
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
         }
       }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    
-    // Check initial state on load
-    const currentSignal = localStorage.getItem(CALL_SIGNAL_KEY);
-    if (currentSignal) {
-        try {
-            const signalData = JSON.parse(currentSignal);
-            if (signalData.active) {
-                setCallerDeviceId(signalData.fromDeviceId);
-                setIsRinging(true);
-                 if (audioRef.current) {
-                    audioRef.current.currentTime = 0;
-                    audioRef.current.play().catch(console.error);
-                }
-            }
-        } catch (error) {
-            console.error("Error parsing initial call signal data:", error);
-        }
-    }
-
+    });
 
     return () => {
-      window.removeEventListener("storage", handleStorageChange);
+      off(signalRef, 'value', listener); // Detach the listener
     };
   }, [targetDeviceId]);
 
   const handleDismissClick = () => {
+    if (!targetDeviceId || !database) {
+      console.error("Target Device ID or Firebase not initialized for dismiss.");
+      return;
+    }
     setIsRinging(false);
     setCallerDeviceId(null);
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
-    // Notify other instances/caller that call is dismissed by this target
-    const currentSignalRaw = localStorage.getItem(CALL_SIGNAL_KEY);
-    let currentSignal = {};
-    if (currentSignalRaw) {
-        try {
-            currentSignal = JSON.parse(currentSignalRaw);
-        } catch (e) { /* ignore parse error */ }
-    }
-    localStorage.setItem(CALL_SIGNAL_KEY, JSON.stringify({ 
-      ...currentSignal,
-      active: false, 
+
+    const signalRef = ref(database, CALL_SIGNAL_PATH);
+    // Update the existing signal to show it's dismissed by this target
+    // We use update() to only modify specific fields and not overwrite fromDeviceId if another call is incoming.
+    // However, for this simple model, the controller usually sets the fromDeviceId.
+    update(signalRef, {
+      active: false,
       dismissedBy: targetDeviceId,
-      timestamp: Date.now() 
-    }));
+      dismissTimestamp: Date.now()
+    }).catch(error => {
+      console.error("Error updating signal in Firebase on dismiss:", error);
+    });
   };
 
   return (
@@ -136,7 +110,7 @@ export default function TargetPage() {
                   ID: <span className="font-mono text-foreground break-all">{targetDeviceId}</span>
                 </p>
                 <CardDescription className="text-xs mt-2">
-                  This page listens for incoming Chinnu calls.
+                  This page listens for incoming Chinnu calls via Firebase.
                 </CardDescription>
               </>
             ) : (
@@ -179,7 +153,7 @@ export default function TargetPage() {
           </CardContent>
         </Card>
       </main>
-      
+
       <audio ref={audioRef} src="/ringtone.mp3" preload="metadata" loop={true} />
 
       <footer className="py-4 sm:py-6 text-center text-muted-foreground text-xs">
