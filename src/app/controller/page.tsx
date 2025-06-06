@@ -24,9 +24,9 @@ export default function ControllerPage() {
       }
       setDeviceId(id);
 
-      // Preload audio
+      // Preload audio metadata
       if (audioRef.current) {
-        audioRef.current.load();
+        audioRef.current.load(); // This will respect the preload="metadata" attribute
       }
     }
   }, []);
@@ -109,7 +109,7 @@ export default function ControllerPage() {
         </Link>
       </main>
 
-      <audio ref={audioRef} src="/ringtone.mp3" preload="auto" loop={false} />
+      <audio ref={audioRef} src="/ringtone.mp3" preload="metadata" loop={false} />
 
       <footer className="py-4 sm:py-6 text-center text-muted-foreground text-xs">
         Chinnu Caller (Controller) &copy; {currentYear ?? ""} &bull; Designed with <span className="text-primary">&hearts;</span>
