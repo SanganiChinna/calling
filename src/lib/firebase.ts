@@ -7,13 +7,14 @@ import { initializeApp, getApp, type FirebaseApp } from "firebase/app";
 import { getDatabase, type Database } from "firebase/database";
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY", // REPLACE THIS
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com", // REPLACE THIS
-  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com", // REPLACE THIS
-  projectId: "YOUR_PROJECT_ID", // REPLACE THIS
-  storageBucket: "YOUR_PROJECT_ID.appspot.com", // REPLACE THIS
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // REPLACE THIS
-  appId: "YOUR_APP_ID", // REPLACE THIS
+  apiKey: "AIzaSyCj_JA2XBS4kO5Koq_ooEwarB1H4rm-yKM",
+  authDomain: "ringapp-d68f7.firebaseapp.com",
+  databaseURL: "https://ringapp-d68f7-default-rtdb.firebaseio.com",
+  projectId: "ringapp-d68f7",
+  storageBucket: "ringapp-d68f7.firebasestorage.app",
+  messagingSenderId: "962080254010",
+  appId: "1:962080254010:web:f5fa88eb8c9d19496bed03",
+  measurementId: "G-YK36MGM8CH"
 };
 
 let app: FirebaseApp;

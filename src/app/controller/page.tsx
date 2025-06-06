@@ -39,7 +39,6 @@ export default function ControllerPage() {
     setCurrentYear(new Date().getFullYear());
   }, []);
 
-  // Listen for call dismissal
   useEffect(() => {
     if (!deviceId || !database) return;
 
@@ -99,35 +98,14 @@ export default function ControllerPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground font-body">
-      <header className="p-4 sm:p-6 flex justify-between items-center">
-        <Link href="/" className="text-sm text-primary hover:underline">
-          &larr; Back to Home
-        </Link>
-        <Card className="w-full max-w-md bg-card shadow-lg rounded-lg border-border">
-          <CardHeader className="pb-3 pt-4 px-4 sm:px-5">
-            <CardTitle className="font-headline text-lg sm:text-xl flex items-center text-card-foreground">
-              <Info className="mr-2 h-5 w-5 text-primary shrink-0" />
-              Your Device (Caller)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-4 sm:px-5 pb-4">
-            {deviceId ? (
-              <>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  ID: <span className="font-mono text-foreground break-all">{deviceId}</span>
-                </p>
-                <CardDescription className="text-xs mt-2">
-                  This unique ID helps identify your device for calls.
-                </CardDescription>
-              </>
-            ) : (
-              <p className="text-xs sm:text-sm text-muted-foreground">Initializing device ID...</p>
-            )}
-          </CardContent>
-        </Card>
-      </header>
-
+    <div
+      className="flex flex-col min-h-screen bg-background text-foreground font-body"
+      style={{
+        backgroundColor: "#FFB6C1", // Light pink
+        backgroundImage: "url('/placeholder-background-image.jpg')", // Placeholder image
+        backgroundSize: "cover",
+        backgroundRepeat: "no-repeat",
+      }}>
       <main className="flex flex-grow flex-col items-center justify-center p-4 text-center">
         <ChinnuButton onClick={handleChinnuClick} aria-label="Press to send a Chinnu call" />
         <p className="mt-8 sm:mt-10 font-headline text-xl sm:text-2xl md:text-3xl text-primary">
@@ -144,7 +122,7 @@ export default function ControllerPage() {
       <audio ref={audioRef} src="/ringtone.mp3" preload="metadata" loop={false} />
 
       <footer className="py-4 sm:py-6 text-center text-muted-foreground text-xs mt-auto">
-        Chinnu Caller (Controller) &copy; {currentYear ?? ""} &bull; Designed with <span className="text-primary">&hearts;</span>
+        Created For you &copy; {currentYear ?? ""} &bull; Designed with <span className="text-primary">&hearts;</span>
       </footer>
     </div>
   );

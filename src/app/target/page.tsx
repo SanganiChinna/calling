@@ -132,7 +132,7 @@ export default function TargetPage() {
           <CardContent className="pb-6">
             {isRinging ? (
               <>
-                <CardTitle className="font-headline text-2xl sm:text-3xl text-primary">Incoming Call!</CardTitle>
+                <CardTitle className="font-headline text-2xl sm:text-3xl text-primary">Lucky is calling</CardTitle>
                 {callerDeviceId && (
                   <p className="text-sm text-muted-foreground mt-1">
                     From: <span className="font-mono text-foreground">{callerDeviceId.substring(0, 12)}...</span>
