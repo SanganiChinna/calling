@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Info, PhoneIncoming, PhoneOff } from "lucide-react";
+import Link from "next/link";
 
 const CALL_SIGNAL_KEY = 'chinnuCallSignal';
 
@@ -30,6 +31,9 @@ export default function TargetPage() {
         audioRef.current.load();
       }
     }
+  }, []);
+
+  useEffect(() => {
     setCurrentYear(new Date().getFullYear());
   }, []);
 
@@ -47,11 +51,14 @@ export default function TargetPage() {
             }
           } else {
             // Signal is not active (e.g., dismissed by another target or caller cancelled)
-            setIsRinging(false);
-            setCallerDeviceId(null);
-            if (audioRef.current) {
-              audioRef.current.pause();
-              audioRef.current.currentTime = 0;
+            // Only stop ringing if this target wasn't the one dismissing (or if no dismisser specified)
+            if (!signalData.dismissedBy || signalData.dismissedBy !== targetDeviceId) {
+                 setIsRinging(false);
+                 setCallerDeviceId(null);
+                 if (audioRef.current) {
+                   audioRef.current.pause();
+                   audioRef.current.currentTime = 0;
+                 }
             }
           }
         } catch (error) {
@@ -84,7 +91,7 @@ export default function TargetPage() {
     return () => {
       window.removeEventListener("storage", handleStorageChange);
     };
-  }, []);
+  }, [targetDeviceId]);
 
   const handleDismissClick = () => {
     setIsRinging(false);
@@ -111,8 +118,11 @@ export default function TargetPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground font-body">
-      <header className="p-4 sm:p-6">
-        <Card className="w-full max-w-md mx-auto sm:mx-0 sm:ml-auto sm:mr-4 bg-card shadow-lg rounded-lg border-border">
+      <header className="p-4 sm:p-6 flex justify-between items-center">
+        <Link href="/" className="text-sm text-primary hover:underline">
+          &larr; Back to Home
+        </Link>
+        <Card className="w-full max-w-md bg-card shadow-lg rounded-lg border-border">
           <CardHeader className="pb-3 pt-4 px-4 sm:px-5">
             <CardTitle className="font-headline text-lg sm:text-xl flex items-center text-card-foreground">
               <Info className="mr-2 h-5 w-5 text-primary shrink-0" />
@@ -173,7 +183,7 @@ export default function TargetPage() {
       <audio ref={audioRef} src="/assets/ringtone.mp3" preload="auto" loop={true} />
 
       <footer className="py-4 sm:py-6 text-center text-muted-foreground text-xs">
-        Chinnu Target &copy; {currentYear ?? new Date().getFullYear()}
+        Chinnu Target &copy; {currentYear ?? ""}
       </footer>
     </div>
   );
