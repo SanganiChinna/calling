@@ -13,6 +13,7 @@ export default function TargetPage() {
   const [isRinging, setIsRinging] = useState(false);
   const [callerDeviceId, setCallerDeviceId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
 
   useEffect(() => {
     // Initialize target device ID
@@ -29,6 +30,7 @@ export default function TargetPage() {
         audioRef.current.load();
       }
     }
+    setCurrentYear(new Date().getFullYear());
   }, []);
 
   useEffect(() => {
@@ -171,7 +173,7 @@ export default function TargetPage() {
       <audio ref={audioRef} src="/assets/ringtone.mp3" preload="auto" loop={true} />
 
       <footer className="py-4 sm:py-6 text-center text-muted-foreground text-xs">
-        Chinnu Target &copy; {new Date().getFullYear()}
+        Chinnu Target &copy; {currentYear ?? new Date().getFullYear()}
       </footer>
     </div>
   );

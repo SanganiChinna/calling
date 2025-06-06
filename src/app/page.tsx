@@ -11,6 +11,7 @@ import { Info, ExternalLink } from "lucide-react";
 export default function HomePage() {
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
   // const { toast } = useToast(); // Uncomment for toast notifications
 
   useEffect(() => {
@@ -28,6 +29,7 @@ export default function HomePage() {
         audioRef.current.load();
       }
     }
+    setCurrentYear(new Date().getFullYear());
   }, []);
 
   const handleChinnuClick = () => {
@@ -103,7 +105,7 @@ export default function HomePage() {
       <audio ref={audioRef} src="/assets/ringtone.mp3" preload="auto" loop={false} />
 
       <footer className="py-4 sm:py-6 text-center text-muted-foreground text-xs">
-        Chinnu Caller &copy; {new Date().getFullYear()} &bull; Designed with <span className="text-primary">&hearts;</span>
+        Chinnu Caller &copy; {currentYear ?? new Date().getFullYear()} &bull; Designed with <span className="text-primary">&hearts;</span>
       </footer>
     </div>
   );
