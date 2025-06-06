@@ -109,7 +109,7 @@ export default function ControllerPage() {
         </Link>
       </main>
 
-      <audio ref={audioRef} src="/assets/ringtone.mp3" preload="auto" loop={false} />
+      <audio ref={audioRef} src="/ringtone.mp3" preload="auto" loop={false} />
 
       <footer className="py-4 sm:py-6 text-center text-muted-foreground text-xs">
         Chinnu Caller (Controller) &copy; {currentYear ?? ""} &bull; Designed with <span className="text-primary">&hearts;</span>

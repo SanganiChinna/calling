@@ -180,7 +180,7 @@ export default function TargetPage() {
         </Card>
       </main>
       
-      <audio ref={audioRef} src="/assets/ringtone.mp3" preload="auto" loop={true} />
+      <audio ref={audioRef} src="/ringtone.mp3" preload="auto" loop={true} />
 
       <footer className="py-4 sm:py-6 text-center text-muted-foreground text-xs">
         Chinnu Target &copy; {currentYear ?? ""}
