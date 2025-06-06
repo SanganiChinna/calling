@@ -1,9 +1,11 @@
+
 "use client";
 
 import { ChinnuButton } from "@/components/ChinnuButton";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Info } from "lucide-react";
+import { Info, ExternalLink } from "lucide-react";
 // import { useToast } from "@/hooks/use-toast"; // Uncomment if you want to use toast notifications
 
 export default function HomePage() {
@@ -30,8 +32,14 @@ export default function HomePage() {
 
   const handleChinnuClick = () => {
     console.log(`Chinnu button clicked on device: ${deviceId}. Initiating ring...`);
-    // In a real app, this would send a signal to the target device
-    // (e.g., via Firebase, WebSockets).
+    
+    if (deviceId) {
+      localStorage.setItem('chinnuCallSignal', JSON.stringify({ 
+        fromDeviceId: deviceId, 
+        timestamp: Date.now(), 
+        active: true 
+      }));
+    }
 
     if (audioRef.current) {
       audioRef.current.currentTime = 0; // Rewind to start
@@ -59,7 +67,7 @@ export default function HomePage() {
           <CardHeader className="pb-3 pt-4 px-4 sm:px-5">
             <CardTitle className="font-headline text-lg sm:text-xl flex items-center text-card-foreground">
               <Info className="mr-2 h-5 w-5 text-primary shrink-0" />
-              Your Device
+              Your Device (Caller)
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 sm:px-5 pb-4">
@@ -85,11 +93,13 @@ export default function HomePage() {
           Tap "Chinnu" to make a call!
         </p>
         <p className="mt-2 text-xs sm:text-sm text-muted-foreground max-w-xs sm:max-w-md md:max-w-lg">
-          When you press the button, it will attempt to play a ringtone. In a full application, this would signal another designated device to ring.
+          When you press the button, it will attempt to play a ringtone locally and send a signal to any open Target Device page.
         </p>
+        <Link href="/target" className="mt-4 inline-flex items-center text-sm text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+          Open Target Device Page <ExternalLink className="ml-1 h-4 w-4" />
+        </Link>
       </main>
       
-      {/* Ensure the path to ringtone.mp3 is correct. It should be in the public/assets folder. */}
       <audio ref={audioRef} src="/assets/ringtone.mp3" preload="auto" loop={false} />
 
       <footer className="py-4 sm:py-6 text-center text-muted-foreground text-xs">
