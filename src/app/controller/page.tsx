@@ -80,16 +80,7 @@ export default function ControllerPage() {
     const signalRef = ref(database, CALL_SIGNAL_PATH);
     set(signalRef, callData)
       .then(() => {
-        if (audioRef.current) {
-          audioRef.current.currentTime = 0;
-          setIsRinging(true);
-          audioRef.current.play().catch(error => {
-            console.error("Error playing audio:", error);
-            // toast({ title: "Audio Playback Error", description: "Could not play ringtone.", variant: "destructive" });
-            setIsRinging(false);
-          });
-        }
-        // toast({ title: "Chinnu Call Sent!", description: `Device ${deviceId?.substring(0,8)}... initiated call via Firebase.` });
+        console.log("Call signal sent successfully.");
       })
       .catch(error => {
         console.error("Error sending call signal to Firebase:", error);
@@ -108,9 +99,10 @@ export default function ControllerPage() {
       }}>
       <main className="flex flex-grow flex-col items-center justify-center p-4 text-center">
         <ChinnuButton onClick={handleChinnuClick} aria-label="Press to send a Chinnu call" />
-        <p className="mt-8 sm:mt-10 font-headline text-xl sm:text-2xl md:text-3xl text-primary">
+        <p className="mt-8 sm:mt-10 font-headline text-xl sm:text-2xl md:text-3xl text-primary text-center">
           Tap "Chinnu" to make a call!
         </p>
+
 
         {isRinging && (
           <p className="mt-4 text-base sm:text-lg text-primary font-semibold animate-pulse">
