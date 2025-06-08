@@ -49,6 +49,10 @@ export default function TargetPage() {
         if (audioRef.current) {
           audioRef.current.currentTime = 0;
           audioRef.current.play().catch(console.error);
+          // Notify Android app
+          if (typeof window !== 'undefined' && (window as any).Android && (window as any).Android.onSoundActivated) {
+            (window as any).Android.onSoundActivated();
+          }
         }
       } else { // Signal is not active or doesn't exist
         setIsRinging(false);
